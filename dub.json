@@ -1,0 +1,12 @@
+{
+	"description": "Generalized linear models in D",
+	"dependencies": {
+		"mir": "~>3.2.3"
+	},
+	"authors": [
+		"Marc"
+	],
+	"copyright": "Copyright © 2025, Marc",
+	"license": "MIT",
+	"name": "glm"
+}
