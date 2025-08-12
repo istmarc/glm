@@ -1,0 +1,8 @@
+name "test"
+description "Test for glm"
+authors "Marc"
+copyright "Copyright © 2025, Marc"
+license "MIT"
+dependency "glm" path="../"
+dependency "mir" version="~>3.2.3"
+dependency "ggplotd" version="~>1.2.3"

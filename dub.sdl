@@ -1,0 +1,12 @@
+name "glm"
+description "Generalized linear models in D"
+authors "Marc"
+copyright "Copyright © 2025, Marc"
+license "MIT"
+dependency "numir" version="~>2.0.6"
+dependency "mir-lapack" version="~>1.2.12"
+dependency "mir" version="~>3.2.3"
+dependency "cblas" version="~>2.3.4"
+dependency "mir-blas" version="~>1.1.17"
+subConfiguration "mir-lapack" "threelib"
+
