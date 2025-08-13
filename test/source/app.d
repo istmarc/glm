@@ -79,4 +79,22 @@ void main()
       writeln("predicted = ", pred);
    }
 
+   {
+      writeln("y~beta_0 + beta_1 x + beta_2 x^2 using gradient descent");
+      auto x2 = x*x;
+      size_t n = x.elementCount;
+      auto X = empty!float([n, 2uL]);
+      X[0..n, 0] = x;
+      X[0..n, 1] = x2;
+
+      auto model = new linearModel!float();
+      model.fit(X, y, fitMethod.gd, 1e-3, 1e-3, 10000);
+      auto coef = model.coef();
+      writeln("Fitted coef = ", coef);
+      auto pred = model.predict(X);
+      writeln("true y    = ", y);
+      writeln("predicted = ", pred);
+   }
+
+
 }

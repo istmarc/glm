@@ -1,5 +1,7 @@
 module glm;
 
+import glm.optim;
+
 import mir.ndslice;
 import numir;
 import mir.blas;
@@ -72,7 +74,7 @@ public:
 
    /// Fit a linear model where `x` is matrix and `y` is a vector
    /// By default using qr decomposition
-   void fit(Slice!(const(T)*, 2) x, Slice!(const(T)*) y, fitMethod method = fitMethod.qr) {
+   void fit(Slice!(const(T)*, 2) x, Slice!(const(T)*) y, fitMethod method = fitMethod.qr, T learningRate = 1e-3, T eps = 1e-3, size_t iterMax = 10000) {
       // x is n*k
       size_t n = x.shape[0];
       size_t k = x.shape[1];
@@ -97,12 +99,14 @@ public:
          fitLinearModelQR(XtX, Xty);
       } else if (method == fitMethod.cholesky) {
          fitLinearModelCholesky(XtX, Xty);
+      } else if (method == fitMethod.gd) {
+         fitLinearModelGradientDescent(XtX, Xty, learningRate, eps, iterMax);
       }
    }
 
    /// Fit a linear model wehre `x` and `y` are both vectors
    /// by default using qr decomposition
-   void fit(Slice!(const(T)*) x, Slice!(const(T)*) y, fitMethod method = fitMethod.qr) {
+   void fit(Slice!(const(T)*) x, Slice!(const(T)*) y, fitMethod method = fitMethod.qr, T learningRate = 1e-3, T eps = 1e-3, size_t iterMax = 10000) {
       size_t n = y.shape[0];
       assert(n == x.shape[0]);
       size_t k = 1;
@@ -126,6 +130,8 @@ public:
          fitLinearModelQR(XtX, Xty);
       } else if (method == fitMethod.cholesky) {
          fitLinearModelCholesky(XtX, Xty);
+      } else if (method == fitMethod.gd) {
+         fitLinearModelGradientDescent(XtX, Xty, learningRate, eps, iterMax);
       }
    }
 
@@ -218,5 +224,28 @@ private:
       fitted = true;
    }
 
+   // Fit a linear model using gradient descent
+   void fitLinearModelGradientDescent(Slice!(const(T)*, 2) XtX, Slice!(const(T)*) Xty, T learningRate, T eps, size_t iterMax) {
+      size_t n = XtX.shape[0];
+      assert(XtX.shape[1] == n);
+
+      // Run gradient descent algoithm
+      auto algo = new gradientDescent!T(n, learningRate, eps, iterMax);
+      // Gradient of the objective function
+      Slice!(T*) gradObj(Slice!(const(T)*) theta) {
+         size_t n = theta.elementCount;
+         auto XtXtheta = empty!T(n);
+         gemv!T(cast(T)(1), XtX, theta, cast(T)(0), XtXtheta);
+         auto gradValue = empty!T(n);
+         foreach(i; 0..n) {
+            gradValue[i] = cast(T)(-2)*Xty[i] + cast(T)(2)*XtXtheta[i];
+         }
+         return gradValue;
+      }
+      // Optimize the objective function
+      beta = algo.optimize(&gradObj);
+
+      fitted = true;
+   }
 }
 
