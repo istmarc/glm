@@ -24,7 +24,7 @@ void main()
       auto ys = y.array;
 
 
-      auto model = new linearModel!float();
+      auto model = new LinearModel!float();
       model.fit(x, y);
       auto coef = model.coef();
       writeln("Fitted coef = ", coef);
@@ -52,7 +52,7 @@ void main()
       X[0..n, 0] = x;
       X[0..n, 1] = x2;
 
-      auto model = new linearModel!float();
+      auto model = new LinearModel!float();
       model.fit(X, y);
       auto coef = model.coef();
       writeln("Fitted coef = ", coef);
@@ -69,8 +69,8 @@ void main()
       X[0..n, 0] = x;
       X[0..n, 1] = x2;
 
-      auto model = new linearModel!float();
-      model.fit(X, y, fitMethod.cholesky);
+      auto model = new LinearModel!float();
+      model.fit(X, y, FitMethod.cholesky);
       auto coef = model.coef();
       writeln("Fitted coef = ", coef);
       writeln(X.shape);
@@ -87,8 +87,8 @@ void main()
       X[0..n, 0] = x;
       X[0..n, 1] = x2;
 
-      auto model = new linearModel!float();
-      model.fit(X, y, fitMethod.gd, 1e-3, 1e-3, 10000);
+      auto model = new LinearModel!float();
+      model.fit(X, y, FitMethod.gd, 1e-3, 1e-3, 10000);
       auto coef = model.coef();
       writeln("Fitted coef = ", coef);
       auto pred = model.predict(X);
@@ -104,8 +104,8 @@ void main()
       X[0..n, 0] = x;
       X[0..n, 1] = x2;
 
-      auto model = new linearModel!float();
-      model.fit(X, y, fitMethod.sgd, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, true);
+      auto model = new LinearModel!float();
+      model.fit(X, y, FitMethod.sgd, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3, true);
       auto coef = model.coef();
       writeln("Fitted coef = ", coef);
       auto pred = model.predict(X);

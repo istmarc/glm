@@ -10,14 +10,14 @@ import mir.blas;
 /++
 Abstract class representing gradient descent algotihms
 +/
-abstract class gradientDescentAlgorithm(T){
+abstract class GradientDescentAlgorithm(T){
    //Slice!(T*) optimize(Slice!(T*) delegate(Slice(const(T)*)) gradF);
 };
 
 /++
 Gradient descent algorithm.
 +/
-class gradientDescent(T) : gradientDescentAlgorithm!T {
+class GradientDescent(T) : GradientDescentAlgorithm!T {
 private:
    size_t n;
    T eps;
@@ -66,7 +66,7 @@ Stochastic Gradient descent algorithm.
 Reference: Pytorch Stochastic gradient descent
 https://docs.pytorch.org/docs/stable/generated/torch.optim.SGD.html
 +/
-class stochasticGradientDescent(T) : gradientDescentAlgorithm!T {
+class SGD(T) : GradientDescentAlgorithm!T {
 private:
    size_t n;
    // Learning rate

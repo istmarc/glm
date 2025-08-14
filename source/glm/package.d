@@ -1,54 +1,20 @@
 module glm;
 
-import glm.optim;
+public import glm.optim;
+import glm.linalg;
 
 import mir.ndslice;
 import numir;
 import mir.blas;
 import mir.lapack;
 
-/++
-Backward subtitution
-Solve Ux = y where U is an upper traingular matrix
-+/
-void backward_subt(T)(Slice!(const(T)*, 2) U, Slice!(const(T)*) y, Slice!(T*) x) {
-   long n = cast(long) x.elementCount;
-   assert(y.elementCount == n);
-   assert(U.shape[0] == n && U.shape[1] == n);
-   x[n-1] = y[n-1] / U[n-1, n-1];
-   for (long i = n-2; i>=0; i--) {
-      T s = y[i];
-      for (long j = i+1; j<n; j++) {
-         s -= U[i, j]* x[j];
-      }
-      x[i] = s / U[i, i];
-   }
-}
-
-/++
-Forward subtitution
-Solve Lx = y where L is a lower triangular matrix
-+/
-void forward_subt(T)(Slice!(const(T)*, 2) L, Slice!(const(T)*) y, Slice!(T*) x) {
-   size_t n = x.elementCount;
-   assert(y.elementCount == n);
-   assert(L.shape[0] == n && L.shape[1] == n);
-   x[0] = y[0] / L[0, 0];
-   for (size_t i = 1; i < n; i++) {
-      T s = y[i];
-      for (size_t j = 0; j < i; j++) {
-      s -= L[i, j] * x[j];
-      }
-      x[i] = s / L[i, i];
-   }
-}
-
 /++ Method for fitting a linear model
    qr: QR decomposition
    cholesky: Cholesky decomposition
    gd: Gradient descent
+   sgd: Stochastic gradient descent
 +/
-enum fitMethod{
+enum FitMethod{
    qr,
    cholesky,
    gd,
@@ -58,7 +24,7 @@ enum fitMethod{
 /++
 Linear model.
 +/
-class linearModel(T) {
+class LinearModel(T) {
 private:
    Slice!(T*) beta;
    bool fitted = false;
@@ -75,7 +41,7 @@ public:
 
    /// Fit a linear model where `x` is matrix and `y` is a vector
    /// By default using qr decomposition
-   void fit(Slice!(const(T)*, 2) x, Slice!(const(T)*) y, fitMethod method = fitMethod.qr,
+   void fit(Slice!(const(T)*, 2) x, Slice!(const(T)*) y, FitMethod method = FitMethod.qr,
       T learningRate = 1e-3, T momentum = 0, T dampening = 0,
       T weightDecay = 0, T eps = 1e-3, bool nesterov = false, size_t iterMax = 10000) {
       // x is n*k
@@ -98,11 +64,11 @@ public:
       auto Xty = empty!T(k+1);
       gemv!T(cast(T)(1), Xt, y, cast(T)(0), Xty);
 
-      if (method == fitMethod.qr) {
+      if (method == FitMethod.qr) {
          fitLinearModelQR(XtX, Xty);
-      } else if (method == fitMethod.cholesky) {
+      } else if (method == FitMethod.cholesky) {
          fitLinearModelCholesky(XtX, Xty);
-      } else if (method == fitMethod.gd || method == fitMethod.sgd) {
+      } else if (method == FitMethod.gd || method == FitMethod.sgd) {
          fitLinearModelGradientDescent(method, XtX, Xty, learningRate, momentum,
             dampening, weightDecay, eps, nesterov, iterMax);
       }
@@ -110,7 +76,7 @@ public:
 
    /// Fit a linear model wehre `x` and `y` are both vectors
    /// by default using qr decomposition
-   void fit(Slice!(const(T)*) x, Slice!(const(T)*) y, fitMethod method = fitMethod.qr,
+   void fit(Slice!(const(T)*) x, Slice!(const(T)*) y, FitMethod method = FitMethod.qr,
       T learningRate = 1e-3,  T momentum = 0, T dampening = 0, T weightDecay = 0,
       T eps = 1e-3, bool nesterov = false, size_t iterMax = 10000) {
       size_t n = y.shape[0];
@@ -132,11 +98,11 @@ public:
       auto Xty = empty!T(k+1);
       gemv!T(cast(T)(1), Xt, y, cast(T)(0), Xty);
 
-      if (method == fitMethod.qr) {
+      if (method == FitMethod.qr) {
          fitLinearModelQR(XtX, Xty);
-      } else if (method == fitMethod.cholesky) {
+      } else if (method == FitMethod.cholesky) {
          fitLinearModelCholesky(XtX, Xty);
-      } else if (method == fitMethod.gd || method == fitMethod.sgd) {
+      } else if (method == FitMethod.gd || method == FitMethod.sgd) {
          fitLinearModelGradientDescent(method, XtX, Xty, learningRate, momentum,
             dampening, weightDecay, eps, nesterov, iterMax);
       }
@@ -232,7 +198,7 @@ private:
    }
 
    // Fit a linear model using gradient descent
-   void fitLinearModelGradientDescent(fitMethod method, Slice!(const(T)*, 2) XtX, Slice!(const(T)*) Xty,
+   void fitLinearModelGradientDescent(FitMethod method, Slice!(const(T)*, 2) XtX, Slice!(const(T)*) Xty,
       T learningRate, T momentum, T dampening, T weightDecay, T eps, bool nesterov, size_t iterMax) {
       size_t n = XtX.shape[0];
       assert(XtX.shape[1] == n);
@@ -248,14 +214,14 @@ private:
          }
          return gradValue;
       }
-      if (method == fitMethod.gd) {
+      if (method == FitMethod.gd) {
          // Run gradient descent algorithm
-         auto algo = new gradientDescent!T(n, learningRate, eps, iterMax);
+         auto algo = new GradientDescent!T(n, learningRate, eps, iterMax);
          // Optimize the objective function
          beta = algo.optimize(&gradObj);
-      } else if (method == fitMethod.sgd) {
+      } else if (method == FitMethod.sgd) {
          // Run stochastic gradient descent algorithm
-         auto algo = new stochasticGradientDescent!T(n, learningRate, momentum, dampening, weightDecay, eps, nesterov, iterMax);
+         auto algo = new SGD!T(n, learningRate, momentum, dampening, weightDecay, eps, nesterov, iterMax);
          // Optimize the objective function
          beta = algo.optimize(&gradObj);
       }
