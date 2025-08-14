@@ -28,6 +28,7 @@ void main()
     writeln("predicted = ", pred);
 }
 ```
+
 - Fit using a different method
 
 ```d
