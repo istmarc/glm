@@ -1,7 +1,9 @@
 # glm
 Generalized linear models in D
 
-# Example usage
+## Example usage
+
+- Fitting a linear model using QR decomposition
 
 ```d
 import glm;
@@ -15,7 +17,7 @@ void main()
               58.57f, 59.93f, 61.29f, 63.11f, 64.47f,
               66.28f, 68.10f, 69.92f, 72.19f, 74.46f].sliced(15);
 
-    auto model = new linearModel!float();
+    auto model = new LinearModel!float();
     model.fit(x, y);
 
     auto coef = model.coef();
@@ -26,4 +28,12 @@ void main()
     writeln("predicted = ", pred);
 }
 ```
+- Fit using a different method
+
+```d
+    model.fit(x, y, FitMethod.cholesky);
+```
+
+`FitMethod` can be `FitMethod.qr` (default), `FitMethod.cholesky`, `FitMethod.gd` (gradient descent), or `FitMethod.sgd` (Stochastic gradient descent).
+
 
